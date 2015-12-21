@@ -1,4 +1,4 @@
-# mysql-live-select [![Build Status](https://travis-ci.org/numtel/mysql-live-select.svg?branch=master)](https://travis-ci.org/numtel/mysql-live-select)
+# mysql-live-select
 
 NPM Package to provide events when a MySQL select statement result set changes.
 
@@ -66,7 +66,7 @@ liveConnection.select(function(esc, escId){
     'select * from ' + escId(table) +
     'where `id`=' + esc(id)
   );
-}, [ {
+}, LiveMysqlKeySelector.Index(), [ {
   table: table,
   condition: function(row, newRow){
     // Only refresh the results when the row matching the specified id is
@@ -84,12 +84,13 @@ liveConnection.select(function(esc, escId){
 See [`example.js`](example.js) for full source...
 
 
-### LiveMysql.prototype.select(query, triggers)
+### LiveMysql.prototype.select(query, keySelector, triggers)
 
 Argument | Type | Description
 ---------|------|----------------------------------
 `query`  | `string` or `function` | `SELECT` SQL statement. See note below about passing function.
-`triggers` | `[object]` | Array of objects defining which row changes to update result set
+`keySelector` | `LiveMysqlKeySelector` | The type of key to use for identifying rows.
+`triggers` | `[object]` | Array of objects defining which row changes to update result set.
 
 Returns `LiveMysqlSelect` object
 
@@ -99,6 +100,14 @@ A function may be passed as the `query` argument that accepts two arguments.
 
 * The first argument, `esc` is a function that escapes values in the query.
 * The second argument, `escId` is a function that escapes identifiers in the query.
+
+#### Key selectors
+
+Name | Description
+-----|------------------------------
+`LiveMysqlKeySelector.Index()` | Uses the row index as the key. This means that the result set is treated as an array.
+`LiveMysqlKeySelector.Columns([column1,column2,...])` | Uses one or more columns as the key.
+`LiveMysqlKeySelector.Func(keyFunc)` | Uses a function taking `row` and `index` to determine the key for a row.
 
 #### Trigger options
 
@@ -134,7 +143,7 @@ Close connections and stop checking for updates.
 
 ### LiveMysql.applyDiff(data, diff)
 
-Exposed statically on the LiveMysql object is a function for applying a `diff` given in an `update` event to an array of rows given in the `data` argument.
+Exposed statically on the LiveMysql object is a function for applying a `diff` given in an `update` event to a dictionary of rows given in the `data` argument.
 
 ## LiveMysqlSelect object
 
@@ -153,7 +162,7 @@ As well as all of the other methods available on [`EventEmitter`](http://nodejs.
 
 Event Name | Arguments | Description
 -----------|-----------|---------------------------
-`update` | `diff`, `data` | First argument contains an object describing the difference since the previous `update` event with `added`, `removed`, `moved`, and `copied` rows. Second argument contains complete result set array.
+`update` | `diff`, `data` | First argument contains an object describing the difference since the previous `update` event with `added`, `changed`, and `removed` rows. Second argument contains complete result set as a dictionary.
 `error` | `error` | Unhandled errors will be thrown
 
 ## Running Tests

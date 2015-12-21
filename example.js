@@ -20,7 +20,7 @@ liveConnection.select(function(esc, escId){
     'select * from ' + escId(table) +
     'where `id`=' + esc(id)
   );
-}, [ {
+}, LiveMysqlKeySelector.Index(), [ {
   table: table,
   condition: function(row, newRow){
     // Only refresh the results when the row matching the specified id is
@@ -34,4 +34,3 @@ liveConnection.select(function(esc, escId){
   // data contains an array of rows of the new result set
   console.log(data);
 });
-
