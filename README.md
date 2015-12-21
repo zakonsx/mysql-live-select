@@ -2,6 +2,16 @@
 
 NPM Package to provide events when a MySQL select statement result set changes.
 
+NOTE: This version of mysql-live-select differs from numtel's original package
+in that result sets are treated as dictionaries rather than arrays. The original
+package's diffing emits incorrect (with respect to the primary key) events when
+rows are inserted or deleted at any position other than the end of the array. In
+this version, the identity of each row is determined by a `LiveMysqlKeySelector`
+that is passed into the `select` function. The most common use case is
+`LiveMysqlKeySelector.Columns([primary_key_column])`, which ensures that row
+insertions and deletions are detected based on the value of
+`primary_key_column`.
+
 Built using the [`zongji` Binlog Tailer](https://github.com/nevill/zongji) and [`node-mysql`](https://github.com/felixge/node-mysql) projects.
 
 * [Example Application using Express, SockJS and React](https://github.com/numtel/reactive-mysql-example)
