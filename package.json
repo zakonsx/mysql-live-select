@@ -20,7 +20,8 @@
     "lodash": "^3.10.1",
     "md5": "^2.0.0",
     "mysql": "^2.8.0",
-    "zongji": "^0.3.2"
+    "zongji": "^0.3.2",
+    "ejson": "^2.1.2"
   },
   "devDependencies": {
     "nodeunit": "^0.9.0"
