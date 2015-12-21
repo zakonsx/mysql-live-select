@@ -6,6 +6,8 @@ Built using the [`zongji` Binlog Tailer](https://github.com/nevill/zongji) and [
 
 * [Example Application using Express, SockJS and React](https://github.com/numtel/reactive-mysql-example)
 * [Meteor package for reactive MySQL](https://github.com/numtel/meteor-mysql)
+* [NPM Package for Sails.js connection adapter integration](https://github.com/numtel/sails-mysql-live-select)
+* [Analogous package for PostgreSQL, `pg-live-select`](https://github.com/numtel/pg-live-select)
 
 This package has been tested to work in MySQL 5.5.40 and 5.6.19. Expected support is all MySQL server version >= 5.1.15.
 
@@ -30,7 +32,7 @@ This package has been tested to work in MySQL 5.5.40 and 5.6.19. Expected suppor
 * Create an account with replication privileges:
 
   ```sql
-  GRANT REPLICATION SLAVE, REPLICATION CLIENT ON *.* TO 'user'@'localhost'
+  GRANT REPLICATION SLAVE, REPLICATION CLIENT, SELECT ON *.* TO 'user'@'localhost'
   ```
 
 ## LiveMysql Constructor
@@ -51,7 +53,7 @@ Setting | Type | Description
 --------|------|------------------------------
 `serverId`  | `integer` | [Unique number (1 - 2<sup>32</sup>)](http://dev.mysql.com/doc/refman/5.0/en/replication-options.html#option_mysqld_server-id) to identify this replication slave instance. Must be specified if running more than one instance.<br>**Default:** `1`
 `minInterval` | `integer` | Pass a number of milliseconds to use as the minimum between result set updates. Omit to refresh results on every update. May be changed at runtime.
-`skipDiff` | `boolean` | If `true`, the `added`, `changed`, and `removed` events will not be emitted. May be changed at runtime.<br>**Default:** `false`
+`checkConditionWhenQueued` | `boolean` | Set to `true` to call the condition function of a query on every binlog row change event. By default (when undefined or `false`), the condition function will not be called again when a query is already queued to be refreshed. Enabling this can be useful if external caching of row changes.
 
 ```javascript
 // Example:
@@ -66,8 +68,16 @@ liveConnection.select(function(esc, escId){
   );
 }, [ {
   table: table,
-  condition: function(row, newRow){ return row.id === id; }
-} ]).on('update', function(data){
+  condition: function(row, newRow){
+    // Only refresh the results when the row matching the specified id is
+    // changed.
+    return row.id === id
+      // On UPDATE queries, newRow must be checked as well
+      || (newRow && newRow.id === id);
+  }
+} ]).on('update', function(diff, data){
+  // diff contains an object describing the difference since the previous update
+  // data contains an array of rows of the new result set
   console.log(data);
 });
 ```
@@ -100,12 +110,13 @@ Name | Type | Description
 
 #### Condition Function
 
-A condition function accepts one or two arguments:
+A condition function accepts up to three arguments:
 
 Argument Name | Description
 --------------|-----------------------------
 `row`         | Table row data
-`newRow`      | New row data (only available on `UPDATE` queries)
+`newRow`      | New row data (only available on `UPDATE` queries, `null` for others)
+`rowDeleted`  | Extra argument for aid in external caching: `true` on `DELETE`  queries, `false` on `INSERT`  queries, `null` on `UPDATE`  queries.
 
 Return `true` when the row data meets the condition to update the result set.
 
@@ -120,6 +131,10 @@ Begin processing updates after `pause()`. All active live select instances will 
 ### LiveMysql.prototype.end()
 
 Close connections and stop checking for updates.
+
+### LiveMysql.applyDiff(data, diff)
+
+Exposed statically on the LiveMysql object is a function for applying a `diff` given in an `update` event to an array of rows given in the `data` argument.
 
 ## LiveMysqlSelect object
 
@@ -138,11 +153,7 @@ As well as all of the other methods available on [`EventEmitter`](http://nodejs.
 
 Event Name | Arguments | Description
 -----------|-----------|---------------------------
-`update` | `rows` | Single argument contains complete result set array. Called before `added`, `changed`, and `removed` events.
-`added` | `row`, `index` | Row added to result set at index
-`changed` | `row`, `newRow`, `index` | Row contents mutated at index
-`removed` | `row`, `index` | Row removed at index
-`diff` | `diff` | Aggregation of `added`, `changed`, `removed` events for current event into a single array for easier handling of multiple changes
+`update` | `diff`, `data` | First argument contains an object describing the difference since the previous `update` event with `added`, `removed`, `moved`, and `copied` rows. Second argument contains complete result set array.
 `error` | `error` | Unhandled errors will be thrown
 
 ## Running Tests
