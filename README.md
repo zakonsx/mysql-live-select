@@ -51,8 +51,7 @@ When connection pooling is enabled, additional connections are created as needed
 
 Argument | Type | Description
 ---------|------|---------------------------
-`settings` | `object` | An object defining the settings. In addition to the [`node-mysql` connection settings](https://github.com/felixge/node-mysql#connection-options) and [pool
-settings](https://github.com/felixge/node-mysql#pool-options), the additional settings below are available.
+`settings` | `object` | An object defining the settings. In addition to the [`node-mysql` connection settings](https://github.com/felixge/node-mysql#connection-options) and [pool settings](https://github.com/felixge/node-mysql#pool-options), the additional settings below are available.
 `callback` | `function` | Optional callback on connection success/failure. Accepts one argument, `error`.
 
 Setting | Type | Description
@@ -101,7 +100,7 @@ Returns `LiveMysqlSelect` object.
 
 To manually escape identifiers and strings, call `escape` or `escapeId` in the `LiveMysql` object.
 
-*This should be avoided. Use the `values` parameter instead.*
+**This should be avoided. Use the `values` parameter instead.**
 
 #### Key selectors
 
