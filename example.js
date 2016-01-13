@@ -12,15 +12,10 @@ var settings = {
 };
 
 var liveConnection = new LiveMysql(settings);
-var table = 'players';
 var id = 11;
 
-liveConnection.select(function(esc, escId){
-  return (
-    'select * from ' + escId(table) +
-    'where `id`=' + esc(id)
-  );
-}, LiveMysqlKeySelector.Index(), [ {
+liveConnection.select('select * from players where `id` = ?', [id],
+LiveMysqlKeySelector.Index(), [ {
   table: table,
   condition: function(row, newRow){
     // Only refresh the results when the row matching the specified id is

@@ -4,6 +4,8 @@ NPM Package to provide events when a MySQL select statement result set changes.
 
 NOTE: This version of mysql-live-select differs from numtel's original package in that result sets are treated as dictionaries rather than arrays. The original package's diffing emits incorrect (with respect to the primary key) events when rows are inserted or deleted at any position other than the end of the array. In this version, the identity of each row is determined by a `LiveMysqlKeySelector` that is passed into the `select` function. The most common use case is `LiveMysqlKeySelector.Columns([primary_key_column])`, which ensures that row insertions and deletions are detected based on the value of `primary_key_column`.
 
+There are other changes and additional features. See below for more details.
+
 Built using the [`zongji` Binlog Tailer](https://github.com/nevill/zongji) and [`node-mysql`](https://github.com/felixge/node-mysql) projects.
 
 * [Example Application using Express, SockJS and React](https://github.com/numtel/reactive-mysql-example)
@@ -39,36 +41,34 @@ This package has been tested to work in MySQL 5.5.40 and 5.6.19. Expected suppor
 
 ## LiveMysql Constructor
 
-The `LiveMysql` constructor makes 3 connections to your MySQL database:
+The `LiveMysql` constructor creates up to 3 connections to your MySQL database:
 
-* Connection for executing `SELECT` queries (exposed `node-mysql` instance as `db` property)
+* (When connection pooling is disabled) Connection for executing `SELECT` queries (exposed `node-mysql` instance as `db` property)
 * Replication slave connection
 * `information_schema` connection for column information
 
+When connection pooling is enabled, additional connections are created as needed. The pool is exposed via the `pool` property (while `db` is undefined).
 
 Argument | Type | Description
 ---------|------|---------------------------
-`settings` | `object` | An object defining the settings. In addition to the [`node-mysql` connection settings](https://github.com/felixge/node-mysql#connection-options), the additional settings below are available.
+`settings` | `object` | An object defining the settings. In addition to the [`node-mysql` connection settings](https://github.com/felixge/node-mysql#connection-options) and [pool
+settings](https://github.com/felixge/node-mysql#pool-options), the additional settings below are available.
 `callback` | `function` | Optional callback on connection success/failure. Accepts one argument, `error`.
 
 Setting | Type | Description
 --------|------|------------------------------
 `serverId`  | `integer` | [Unique number (1 - 2<sup>32</sup>)](http://dev.mysql.com/doc/refman/5.0/en/replication-options.html#option_mysqld_server-id) to identify this replication slave instance. Must be specified if running more than one instance.<br>**Default:** `1`
+`pool` | `boolean` | If `true`, `LiveMysql` creates a pool rather than a single connection for `SELECT` queries.
 `minInterval` | `integer` | Pass a number of milliseconds to use as the minimum between result set updates. Omit to refresh results on every update. May be changed at runtime.
 `checkConditionWhenQueued` | `boolean` | Set to `true` to call the condition function of a query on every binlog row change event. By default (when undefined or `false`), the condition function will not be called again when a query is already queued to be refreshed. Enabling this can be useful if external caching of row changes.
 
 ```javascript
 // Example:
 var liveConnection = new LiveMysql(settings);
-var table = 'players';
 var id = 11;
 
-liveConnection.select(function(esc, escId){
-  return (
-    'select * from ' + escId(table) +
-    'where `id`=' + esc(id)
-  );
-}, LiveMysqlKeySelector.Index(), [ {
+liveConnection.select('select * from players where `id` = ?', [id],
+LiveMysqlKeySelector.Index(), [ {
   table: table,
   condition: function(row, newRow){
     // Only refresh the results when the row matching the specified id is
@@ -86,22 +86,22 @@ liveConnection.select(function(esc, escId){
 See [`example.js`](example.js) for full source...
 
 
-### LiveMysql.prototype.select(query, keySelector, triggers)
+### LiveMysql.prototype.select(query, values, keySelector, triggers)
 
 Argument | Type | Description
 ---------|------|----------------------------------
-`query`  | `string` or `function` | `SELECT` SQL statement. See note below about passing function.
+`query`  | `string` | `SELECT` SQL statement.
+`values` | `object` | Placeholder values for `query`. This can be `null` or `undefined`.
 `keySelector` | `LiveMysqlKeySelector` | The type of key to use for identifying rows.
 `triggers` | `[object]` | Array of objects defining which row changes to update result set.
 
-Returns `LiveMysqlSelect` object
+Returns `LiveMysqlSelect` object.
 
-#### Function as `query`
+#### Escaping queries
 
-A function may be passed as the `query` argument that accepts two arguments.
+To manually escape identifiers and strings, call `escape` or `escapeId` in the `LiveMysql` object.
 
-* The first argument, `esc` is a function that escapes values in the query.
-* The second argument, `escId` is a function that escapes identifiers in the query.
+*This should be avoided. Use the `values` parameter instead.*
 
 #### Key selectors
 
