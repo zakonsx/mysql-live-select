@@ -172,9 +172,9 @@ Each call to the `select()` method on a LiveMysql object, returns a `LiveMysqlSe
 Method Name | Arguments | Description
 ------------|-----------|-----------------------
 `on`, `addListener` | `event`, `handler` | Add an event handler to the result set. See the following section for a list of the available event names.
-`update`    | `callback` | Update the result set. Callback function accepts `error, rows` arguments. Events will be emitted.
-`stop`      | *None* | Stop receiving updates
-`active`    | *None* | Return `true` if ready to recieve updates, `false` if `stop()` method has been called.
+`invalidate` | *None* | Causes the result set to be updated as soon as possible, but at an unspecified time in the future. When this occurs, the `update` event will be triggered.
+`stop` | *None* | Stop receiving updates
+`active` | *None* | Return `true` if ready to recieve updates, `false` if `stop()` method has been called.
 
 As well as all of the other methods available on [`EventEmitter`](http://nodejs.org/api/events.html)...
 
