@@ -1,6 +1,6 @@
 {
   "name": "mysql-live-select",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Live updating MySQL SELECT statements",
   "main": "lib/LiveMysql.js",
   "repository": "https://github.com/vlasky/mysql-live-select",
@@ -17,9 +17,9 @@
   "author": "Ben Green <ben@latenightsketches.com>; Wen Jia Liu <wj32.64@gmail.com> (http://github.com/wj32); Vlad Lasky (http://github.com/vlasky)",
   "license": "MIT",
   "dependencies": {
-    "lodash": "^4.11.1",
+    "lodash": "^4.14.0",
     "md5": "^2.0.0",
-    "mysql2": "^v1.0.0-rc.5",
+    "mysql2": "^v1.0.0-rc.8",
     "zongji": "^0.4.2",
     "ejson": "^2.1.2"
   },
