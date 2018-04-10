@@ -6,20 +6,20 @@ NOTE: This version of mysql-live-select differs from numtel's original package i
 
 There are other changes and additional features. See below for more details.
 
-Built using the [`zongji` Binlog Tailer](https://github.com/nevill/zongji) and [`node-mysql`](https://github.com/felixge/node-mysql) projects.
+Built using the [`zongji` Binlog Tailer](https://github.com/nevill/zongji) and [`node-mysql2`](https://github.com/sidorares/node-mysql2) projects.
 
 * [Example Application using Express, SockJS and React](https://github.com/numtel/reactive-mysql-example)
 * [Meteor package for reactive MySQL](https://github.com/numtel/meteor-mysql)
 * [NPM Package for Sails.js connection adapter integration](https://github.com/numtel/sails-mysql-live-select)
 * [Analogous package for PostgreSQL, `pg-live-select`](https://github.com/numtel/pg-live-select)
 
-This package has been tested to work in MySQL 5.1, 5.5, 5.6, and 5.7. Expected support is all MySQL server version >= 5.1.15.
+This package has been tested to work in MySQL 5.1, 5.5, 5.6, and 5.7. Expected support is all MySQL server versions >= 5.1.15.
 
 ## Installation
 
 * Add the package to your project:
   ```bash
-  $ npm install mysql-live-select
+  $ npm install vlasky/mysql-live-select
   ```
 
 * Enable MySQL binlog in `my.cnf`, restart MySQL server after making the changes.
